@@ -92,6 +92,7 @@ def train_one(
 
     env = make_env(env_name, **kwargs)
     agent = make_agent(agent_name, env, seed=seed, **config)
+    eval_factory = evaluation_factory(env_name, kwargs, seed)
 
     run_dir = out / f"{env_name}__{agent_name}__seed{seed}"
     run_dir.mkdir(parents=True, exist_ok=True)
@@ -121,7 +122,7 @@ def train_one(
         if agent_name not in NON_LEARNING_AGENTS:
             run_training_episode(env, agent)
         if episode in checkpoints:
-            result = evaluate(agent, lambda: make_env(env_name, **kwargs), games=eval_games)
+            result = evaluate(agent, eval_factory, games=eval_games)
             result.episodes_trained = episode
             logger.log(result)
             agent.save(run_dir / f"model_{episode}.pt")
@@ -135,6 +136,24 @@ def train_one(
 
     logger.close()
     return run_dir
+
+
+def evaluation_factory(env_name: str, kwargs: dict, seed: int):
+    """Fabrique d'environnements d'evaluation, une graine differente par partie.
+
+    Les graines d'evaluation sont decalees loin de celles d'entrainement : on
+    veut mesurer sur des parties que l'agent n'a pas vues, tout en gardant une
+    evaluation reproductible d'un lancement a l'autre.
+    """
+    base = 1_000_000 + seed * 10_000
+
+    def factory(game: int):
+        local = dict(kwargs)
+        if "seed" in local:
+            local["seed"] = base + game
+        return make_env(env_name, **local)
+
+    return factory
 
 
 def run_training_episode(env, agent) -> None:

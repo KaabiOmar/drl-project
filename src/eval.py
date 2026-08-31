@@ -18,6 +18,7 @@ from src.agents import make_agent
 from src.common.metrics import evaluate
 from src.common.seeding import set_seed
 from src.envs import make_env
+from src.train import evaluation_factory
 
 
 def main() -> None:
@@ -40,7 +41,7 @@ def main() -> None:
     if args.model is not None:
         agent.load(args.model)
 
-    result = evaluate(agent, lambda: make_env(args.env, **kwargs), games=args.games)
+    result = evaluate(agent, evaluation_factory(args.env, kwargs, args.seed), games=args.games)
     print(json.dumps(asdict(result), indent=2))
 
 

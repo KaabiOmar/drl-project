@@ -105,23 +105,23 @@ pour justifier les points de mesure effectivement atteints.
 
 ## Resultats de reference (agents sans apprentissage)
 
-Bobail, politique gelee, 30 parties (20 pour la derniere ligne) :
+Bobail, politique gelee, 50 parties (30 pour la derniere ligne) :
 
-| Agent | vs adversaire aleatoire | vs adversaire heuristique |
+| Agent | vs `random` | vs `heuristic` |
 |---|---:|---:|
-| random | -0.33 | -1.00 |
-| random_rollout | +1.00 | -0.47 |
-| mcts_uct (200 iterations) | +1.00 | -0.60 |
-| mcts_uct (2000 iterations) | - | **+0.90** |
+| random | -0.08 (46 % de victoires) | -1.00 (0 %) |
+| random_rollout (20 simulations/coup) | +1.00 (100 %) | -0.72 (14 %) |
+| mcts_uct (200 iterations) | +1.00 (100 %) | -0.60 (20 %) |
+| mcts_uct (2000 iterations) | - | **+1.00 (100 %)** |
 
 Lecture : l'adversaire aleatoire est un plancher que RandomRollout et MCTS
-franchissent a 100 %. L'adversaire heuristique bat MCTS a 200 iterations, mais
-perd nettement a 2000 - la difficulte tient donc a l'HORIZON de recherche, pas a
-la structure du jeu. Il faut voir venir la sequence "ouvrir un trou dans sa
-ligne puis y ramener le bobail", environ quatre demi-coups.
+franchissent a 100 %. L'adversaire heuristique bat MCTS a 200 iterations mais
+perd 100 % a 2000 : la difficulte tient a l'HORIZON de recherche, pas a la
+structure du jeu. Il faut voir venir la sequence "ouvrir un trou dans sa ligne
+puis y ramener le bobail", environ quatre demi-coups.
 
-Cout de cette profondeur : 64 ms par coup a 200 iterations, 509 ms a 2000. La
-barre est posee pour les agents entrainés, qui devront atteindre ce niveau sans
+Cout de cette profondeur : 46 ms par coup a 200 iterations, 556 ms a 2000. La
+barre est posee pour les agents entraines, qui devront atteindre ce niveau sans
 payer ce prix. Detail dans [`docs/rules_bobail.md`](docs/rules_bobail.md).
 
 ## Documents

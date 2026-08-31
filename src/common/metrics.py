@@ -29,11 +29,18 @@ class EvalResult:
     draw_rate: float
 
 
-def evaluate(agent, env_factory: Callable[[], object], games: int = 100) -> EvalResult:
-    """Joue `games` parties avec la politique gelee et agrege les metriques."""
+def evaluate(agent, env_factory: Callable[[int], object], games: int = 100) -> EvalResult:
+    """Joue `games` parties avec la politique gelee et agrege les metriques.
+
+    `env_factory` recoit le NUMERO de la partie et doit renvoyer un
+    environnement dont la graine en depend. Une fabrique qui ignore ce numero
+    rejouerait `games` fois la meme partie : la moyenne serait celle d'un seul
+    tirage et l'ecart-type nul, ce qui donne des metriques d'apparence parfaite
+    et sans aucune valeur.
+    """
     scores, lengths, move_times = [], [], []
-    for _ in range(games):
-        env = env_factory()
+    for game in range(games):
+        env = env_factory(game)
         env.reset()
         steps = 0
         while not env.is_game_over():
