@@ -15,7 +15,9 @@ Exception : le tout premier tour de la partie ne comporte que l'etape 2.
 Fin de partie
 -------------
 * le bobail arrive sur la ligne de depart d'un joueur -> ce joueur GAGNE ;
-* un joueur ne peut pas deplacer le bobail au debut de son tour -> il PERD ;
+* un joueur ne peut pas deplacer le bobail au debut de son tour -> il PERD.
+  Enfermer la boule est donc la seconde facon de gagner : si l'adversaire ne peut
+  plus la bouger, la partie est a moi ;
 * un joueur ne peut deplacer aucun pion -> il PERD (cas de bord, tres rare).
 
 On gagne donc en RAMENANT le bobail chez soi, pas en le poussant chez l'adverse.
@@ -159,11 +161,21 @@ class Bobail(Env):
             return
 
         self._play_opponent_turn()
+        self._start_agent_turn()
+
+    def _start_agent_turn(self) -> None:
+        """Ouvre le tour de l'agent et applique les regles de blocage.
+
+        Un joueur qui ne peut pas deplacer le bobail au debut de son tour perd :
+        c'est la seconde facon de gagner, en enfermant la boule. Extrait ici pour
+        etre testable directement, sans dependre du hasard de l'adversaire.
+        """
+        if self._over:
+            return
         self.phase = PHASE_BOBAIL
-        if not self._over and not self._legal_bobail_directions():
-            # L'agent ne peut pas bouger le bobail au debut de son tour.
+        if not self._legal_bobail_directions():
             self._finish(winner=OPPONENT)
-        elif not self._over and not self._legal_pawn_actions(AGENT):
+        elif not self._legal_pawn_actions(AGENT):
             self._finish(winner=OPPONENT)
 
     def is_game_over(self) -> bool:

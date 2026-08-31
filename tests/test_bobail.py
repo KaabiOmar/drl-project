@@ -11,6 +11,7 @@ import pytest
 
 from src.envs.bobail import (
     AGENT,
+    row_col_of,
     AGENT_HOME_ROW,
     BOBAIL,
     EMPTY,
@@ -91,18 +92,51 @@ def test_bobail_reaching_own_home_row_wins() -> None:
     assert env.score() == pytest.approx(1.0)
 
 
-def test_blocked_bobail_loses_for_the_player_to_move() -> None:
-    env = Bobail(seed=0)
-    env.reset()
-    env.phase = PHASE_BOBAIL
-    # On entoure le bobail de pions : plus aucun deplacement possible.
-    row, col = 2, 2
+def surround_bobail(env, filler: int = OPPONENT) -> None:
+    """Bouche les 8 cases autour du bobail."""
+    row, col = row_col_of(env.bobail)
     for d_row in (-1, 0, 1):
         for d_col in (-1, 0, 1):
             if (d_row, d_col) != (0, 0):
-                env.board[cell_of(row + d_row, col + d_col)] = OPPONENT
+                env.board[cell_of(row + d_row, col + d_col)] = filler
+
+
+def test_agent_loses_when_it_cannot_move_the_bobail() -> None:
+    """Bobail enferme au debut du tour de l'agent : l'agent perd."""
+    env = Bobail(seed=0)
+    env.reset()
+    surround_bobail(env)
     assert env._legal_bobail_directions() == []
-    assert env.available_actions_mask().sum() == 0
+
+    env._start_agent_turn()
+    assert env.is_game_over()
+    assert env.score() == pytest.approx(-1.0)
+
+
+def test_agent_wins_by_trapping_the_bobail_with_its_last_pawn_move() -> None:
+    """Enfermer la boule est la seconde facon de gagner.
+
+    Position construite : le bobail en (2,0) n'a plus qu'une case libre, (3,0).
+    Le pion de l'agent en (4,0) glisse vers le nord et la bouche. L'adversaire
+    ouvre alors son tour sans pouvoir deplacer le bobail : il perd.
+    """
+    env = Bobail(seed=0)
+    env.reset()
+    env.board[:] = EMPTY
+
+    env.bobail = cell_of(2, 0)
+    env.board[env.bobail] = BOBAIL
+    for row, col in ((1, 0), (1, 1), (2, 1), (3, 1)):
+        env.board[cell_of(row, col)] = OPPONENT
+    env.board[cell_of(4, 0)] = AGENT
+    env.phase = PHASE_PAWN
+
+    north = 0
+    env.step(pawn_action(cell_of(4, 0), north))
+
+    assert env.board[cell_of(3, 0)] == AGENT, "le pion doit boucher la derniere case"
+    assert env.is_game_over()
+    assert env.score() == pytest.approx(1.0)
 
 
 def test_mask_only_exposes_legal_actions() -> None:

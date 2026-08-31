@@ -12,14 +12,24 @@ centre.
 
 Le tout premier tour de la partie ne comporte que l'etape 2.
 
-## Fin de partie
+## Les deux facons de gagner
 
-* le bobail arrive sur la ligne de depart d'un joueur : **ce joueur GAGNE** ;
-* un joueur ne peut pas deplacer le bobail au debut de son tour : il perd ;
-* un joueur ne peut deplacer aucun pion : il perd (cas de bord).
+**1. Ramener le bobail chez soi.** Le bobail qui arrive sur la ligne de depart
+d'un joueur fait GAGNER ce joueur - on le ramene chez soi, on ne le pousse pas
+chez l'adversaire. Regle isolee dans `Bobail._settle_bobail_position()`.
 
-On gagne donc en **ramenant** le bobail chez soi, pas en le poussant chez
-l'adversaire. La regle est isolee dans `Bobail._settle_bobail_position()`.
+**2. Enfermer le bobail.** Un joueur qui ne peut pas deplacer le bobail au debut
+de son tour perd. Boucher les huit cases autour de la boule quand c'est a
+l'adversaire de jouer est donc une victoire a part entiere. Regle isolee dans
+`Bobail._start_agent_turn()` pour l'agent, dans `_play_opponent_turn()` pour
+l'adversaire.
+
+Cas de bord, gere de la meme facon : un joueur qui ne peut deplacer aucun pion
+perd egalement.
+
+Les deux voies sont couvertes par les tests
+`test_agent_wins_by_trapping_the_bobail_with_its_last_pawn_move` et
+`test_agent_loses_when_it_cannot_move_the_bobail`.
 
 ## La consequence qui structure tout le jeu
 
