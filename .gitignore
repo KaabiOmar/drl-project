@@ -13,3 +13,6 @@ runs/*
 !runs/.gitkeep
 reports/figures/*
 !reports/figures/.gitkeep
+
+# Environnements virtuels, quel que soit leur suffixe (.venv-torch, .venv-py312...)
+.venv*/
