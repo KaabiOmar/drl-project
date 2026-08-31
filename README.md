@@ -94,23 +94,24 @@ pour justifier les points de mesure effectivement atteints.
 
 ## Resultats de reference (agents sans apprentissage)
 
-30 parties, Bobail, politique gelee :
+Bobail, politique gelee, 30 parties (20 pour la derniere ligne) :
 
 | Agent | vs adversaire aleatoire | vs adversaire heuristique |
 |---|---:|---:|
 | random | -0.33 | -1.00 |
 | random_rollout | +1.00 | -0.47 |
-| mcts_uct | +1.00 | -0.53 |
+| mcts_uct (200 iterations) | +1.00 | -0.60 |
+| mcts_uct (2000 iterations) | - | **+0.90** |
 
 Lecture : l'adversaire aleatoire est un plancher que RandomRollout et MCTS
-franchissent a 100 %, il ne separe donc plus rien au-dela d'un certain niveau.
-L'adversaire heuristique, lui, bat meme MCTS - il ouvre un trou dans sa propre
-ligne puis y ramene le bobail en deux coups, et comme le premier tour du jeu
-n'a pas d'etape "bobail", c'est lui qui deplace la boule en premier.
+franchissent a 100 %. L'adversaire heuristique bat MCTS a 200 iterations, mais
+perd nettement a 2000 - la difficulte tient donc a l'HORIZON de recherche, pas a
+la structure du jeu. Il faut voir venir la sequence "ouvrir un trou dans sa
+ligne puis y ramener le bobail", environ quatre demi-coups.
 
-Ce desavantage de tempo est le sujet de discussion le plus riche du rapport :
-la difficulte ne vient pas de la profondeur de recherche mais de la structure du
-jeu. Voir [`docs/rules_bobail.md`](docs/rules_bobail.md).
+Cout de cette profondeur : 64 ms par coup a 200 iterations, 509 ms a 2000. La
+barre est posee pour les agents entrainés, qui devront atteindre ce niveau sans
+payer ce prix. Detail dans [`docs/rules_bobail.md`](docs/rules_bobail.md).
 
 ## Documents
 
