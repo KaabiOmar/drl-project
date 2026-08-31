@@ -94,18 +94,23 @@ pour justifier les points de mesure effectivement atteints.
 
 ## Resultats de reference (agents sans apprentissage)
 
-30 parties, Bobail, mode glouton :
+30 parties, Bobail, politique gelee :
 
 | Agent | vs adversaire aleatoire | vs adversaire heuristique |
 |---|---:|---:|
-| random | +0.33 | -1.00 |
-| random_rollout | +1.00 | +1.00 |
-| mcts_uct | +1.00 | - |
+| random | -0.33 | -1.00 |
+| random_rollout | +1.00 | -0.47 |
+| mcts_uct | +1.00 | -0.53 |
 
-Lecture : contre l'adversaire aleatoire, jouer au hasard gagne deja deux parties
-sur trois - l'avantage du trait suffit. Cet adversaire ne discrimine donc pas
-les algorithmes. **L'adversaire heuristique est le banc de comparaison a
-retenir** pour le rapport, l'aleatoire servant de garde-fou.
+Lecture : l'adversaire aleatoire est un plancher que RandomRollout et MCTS
+franchissent a 100 %, il ne separe donc plus rien au-dela d'un certain niveau.
+L'adversaire heuristique, lui, bat meme MCTS - il ouvre un trou dans sa propre
+ligne puis y ramene le bobail en deux coups, et comme le premier tour du jeu
+n'a pas d'etape "bobail", c'est lui qui deplace la boule en premier.
+
+Ce desavantage de tempo est le sujet de discussion le plus riche du rapport :
+la difficulte ne vient pas de la profondeur de recherche mais de la structure du
+jeu. Voir [`docs/rules_bobail.md`](docs/rules_bobail.md).
 
 ## Documents
 

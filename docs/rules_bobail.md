@@ -14,37 +14,55 @@ Le tout premier tour de la partie ne comporte que l'etape 2.
 
 ## Fin de partie
 
-* le bobail arrive sur la ligne de depart d'un joueur : **ce joueur perd** ;
+* le bobail arrive sur la ligne de depart d'un joueur : **ce joueur GAGNE** ;
 * un joueur ne peut pas deplacer le bobail au debut de son tour : il perd ;
 * un joueur ne peut deplacer aucun pion : il perd (cas de bord).
 
-## Point a confirmer avant les entrainements longs
+On gagne donc en **ramenant** le bobail chez soi, pas en le poussant chez
+l'adversaire. La regle est isolee dans `Bobail._settle_bobail_position()`.
 
-La variante de la condition de victoire est isolee dans
-`Bobail._settle_bobail_position()`. La formulation retenue - "le bobail sur ma
-ligne me fait perdre" - couvre les deux sens : j'ai gagne si je l'amene sur la
-ligne adverse, j'ai perdu s'il finit sur la mienne.
+## La consequence qui structure tout le jeu
 
-A verifier sur <https://boardgamearena.com/gamepanel?game=bobail> : c'est une
-modification d'une ligne, mais elle invalide tous les resultats deja produits si
-elle arrive tard.
+Sa propre ligne de depart est **pleine** au debut de la partie. Pour y faire
+entrer le bobail, il faut donc d'abord y ouvrir un trou en avancant un de ses
+pions - et ce trou est exactement ce qui rend la victoire possible.
 
-## Consequence de regle qui surprend
-
-La ligne de depart adverse est pleine au debut de la partie. Le bobail ne peut
-donc y entrer que par une case liberee par un pion adverse : gagner suppose
-d'exploiter les trous que l'adversaire ouvre en jouant. C'est la dynamique
-centrale du jeu, et le test `test_bobail_reaching_opponent_home_row_wins` la
-documente.
+D'ou la tension centrale : ouvrir vite pour gagner, mais chaque pion avance est
+un pion qui ne defend plus, et le bobail se deplace dans les deux sens. Un
+joueur qui a ouvert son trou et amene le bobail en face peut le voir repousse au
+tour suivant.
 
 ## Adversaires disponibles
 
 | Mode | Comportement |
 |---|---|
 | `random` | uniforme sur les coups legaux, aux deux etapes |
-| `heuristic` | pousse le bobail vers la ligne de l'agent, puis rapproche un pion du bobail |
+| `heuristic` | ramene le bobail vers SA ligne (ligne 0), puis rapproche un pion du bobail |
 
-Mesure de reference sur 30 parties (agent = coups aleatoires) : **+0.33 de score
-moyen contre `random`, -1.00 contre `heuristic`**. L'adversaire heuristique est
-donc le seul des deux qui discrimine reellement les algorithmes ; l'adversaire
-aleatoire sert de garde-fou.
+## Mesures de reference
+
+30 parties, politique gelee, agent = joueur du bas :
+
+| Agent | vs `random` | vs `heuristic` |
+|---|---:|---:|
+| random | -0.33 | -1.00 |
+| random_rollout | +1.00 | -0.47 |
+| mcts_uct | +1.00 | -0.53 |
+
+Deux lectures a reprendre dans le rapport.
+
+**L'adversaire aleatoire est un plancher, pas un banc d'essai.** RandomRollout et
+MCTS le battent 100 % du temps : au-dela d'un certain niveau, cet adversaire ne
+separe plus rien.
+
+**L'adversaire heuristique bat meme MCTS.** Sa strategie est directe : il ouvre
+un trou dans sa propre ligne en avancant un pion vers le bobail, puis y ramene
+le bobail en deux deplacements. Comme le premier tour de la partie ne comporte
+pas d'etape "bobail", c'est LUI qui deplace le bobail en premier - un avantage
+de tempo structurel. Les parties durent de 4 a 5 demi-coups.
+
+C'est le resultat le plus interessant a discuter : le sujet demande de savoir
+quand appliquer chaque algorithme, et ici la difficulte ne vient pas de la
+profondeur de recherche mais d'un desavantage de tempo. A verifier en faisant
+varier le nombre d'iterations de MCTS - si le score ne bouge pas, la cause est
+structurelle et non algorithmique.

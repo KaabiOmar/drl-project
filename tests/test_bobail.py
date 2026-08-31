@@ -58,12 +58,12 @@ def test_pawn_slide_is_maximal() -> None:
     assert env.board[cell_of(AGENT_HOME_ROW, 0)] == EMPTY
 
 
-def test_bobail_reaching_opponent_home_row_wins() -> None:
+def test_bobail_reaching_opponent_home_row_loses() -> None:
     env = Bobail(seed=0)
     env.reset()
     # Position construite a la main : bobail en (1,2), a une case de la ligne 0.
-    # La ligne adverse demarre pleine : le bobail ne peut y entrer que par une
-    # case liberee par un pion adverse - c'est la dynamique reelle du jeu.
+    # On gagne en ramenant le bobail CHEZ SOI : l'amener chez l'adversaire, meme
+    # volontairement, le fait gagner lui.
     env.board[env.bobail] = EMPTY
     env.bobail = cell_of(1, 2)
     env.board[env.bobail] = BOBAIL
@@ -73,10 +73,10 @@ def test_bobail_reaching_opponent_home_row_wins() -> None:
     north = 0
     env.step(north)
     assert env.is_game_over()
-    assert env.score() == pytest.approx(1.0)
+    assert env.score() == pytest.approx(-1.0)
 
 
-def test_bobail_reaching_own_home_row_loses() -> None:
+def test_bobail_reaching_own_home_row_wins() -> None:
     env = Bobail(seed=0)
     env.reset()
     env.board[env.bobail] = EMPTY
@@ -88,7 +88,7 @@ def test_bobail_reaching_own_home_row_loses() -> None:
     south = 4
     env.step(south)
     assert env.is_game_over()
-    assert env.score() == pytest.approx(-1.0)
+    assert env.score() == pytest.approx(1.0)
 
 
 def test_blocked_bobail_loses_for_the_player_to_move() -> None:

@@ -14,14 +14,15 @@ Exception : le tout premier tour de la partie ne comporte que l'etape 2.
 
 Fin de partie
 -------------
-* le bobail arrive sur la ligne de depart d'un joueur -> ce joueur PERD ;
+* le bobail arrive sur la ligne de depart d'un joueur -> ce joueur GAGNE ;
 * un joueur ne peut pas deplacer le bobail au debut de son tour -> il PERD ;
 * un joueur ne peut deplacer aucun pion -> il PERD (cas de bord, tres rare).
 
-ATTENTION : la variante de la condition de victoire (bobail sur SA propre ligne
-= defaite) est celle retenue ici et isolee dans `_settle_bobail_position()`.
-A confirmer sur boardgamearena avant de lancer les entrainements longs : c'est
-un changement d'une ligne, mais il invalide tous les resultats s'il arrive tard.
+On gagne donc en RAMENANT le bobail chez soi, pas en le poussant chez l'adverse.
+Consequence directe : la ligne de depart est pleine au debut, il faut ouvrir un
+trou dans SA PROPRE ligne pour pouvoir y faire entrer le bobail - tout en
+empechant l'adversaire d'en faire autant. La regle est isolee dans
+`_settle_bobail_position()`.
 
 Encodage
 --------
@@ -250,9 +251,9 @@ class Bobail(Env):
         """Applique la regle de victoire liee a la ligne atteinte par le bobail."""
         row, _ = row_col_of(self.bobail)
         if row == AGENT_HOME_ROW:
-            self._finish(winner=OPPONENT)
-        elif row == OPPONENT_HOME_ROW:
             self._finish(winner=AGENT)
+        elif row == OPPONENT_HOME_ROW:
+            self._finish(winner=OPPONENT)
         return self._over
 
     def _finish(self, winner: int) -> None:
@@ -277,10 +278,10 @@ class Bobail(Env):
         self._slide_pawn(*decode_pawn_action(self._choose_opponent_pawn(actions)))
 
     def _choose_opponent_bobail(self, directions: list[int]) -> int:
-        """L'adversaire gagne en amenant le bobail sur la ligne de l'agent."""
+        """L'adversaire gagne en ramenant le bobail sur SA ligne, la ligne 0."""
         if self.opponent == "random":
             return int(self.rng.choice(directions))
-        best = max(DIRECTIONS[d][0] for d in directions)
+        best = min(DIRECTIONS[d][0] for d in directions)
         greedy = [d for d in directions if DIRECTIONS[d][0] == best]
         return int(self.rng.choice(greedy))
 
