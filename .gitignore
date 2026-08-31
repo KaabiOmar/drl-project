@@ -1,0 +1,15 @@
+__pycache__/
+*.py[cod]
+.venv/
+venv/
+.pytest_cache/
+.DS_Store
+.idea/
+.vscode/
+
+# Sorties d'execution : les modeles retenus pour le rendu sont ajoutes
+# explicitement avec `git add -f`.
+runs/*
+!runs/.gitkeep
+reports/figures/*
+!reports/figures/.gitkeep

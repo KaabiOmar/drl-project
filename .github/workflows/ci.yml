@@ -1,0 +1,18 @@
+name: tests
+
+on:
+  push:
+  pull_request:
+
+jobs:
+  pytest:
+    runs-on: ubuntu-latest
+    steps:
+      - uses: actions/checkout@v4
+      - uses: actions/setup-python@v5
+        with:
+          python-version: "3.11"
+      # Les environnements et les tests ne dependent que de NumPy : la CI reste
+      # rapide et ne casse pas si PyTorch bouge.
+      - run: pip install numpy pytest
+      - run: python -m pytest tests -q
