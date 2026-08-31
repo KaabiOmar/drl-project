@@ -1,8 +1,10 @@
 """Memoires de rejeu, uniforme et prioritaire.
 
-Une transition stocke aussi le MASQUE de l'etat suivant : sans lui, la cible
-temporelle `max_a' Q(s', a')` porte sur des actions illegales et l'apprentissage
-diverge silencieusement.
+Une transition stocke DEUX masques. Celui de l'etat suivant, sans lequel la
+cible temporelle `max_a' Q(s', a')` porte sur des actions illegales et
+l'apprentissage diverge silencieusement. Et celui de l'etat courant, dont PPO a
+besoin pour recalculer ses log-probabilites avec exactement le masque de la
+collecte - sinon les ratios sont faux.
 """
 
 from __future__ import annotations
@@ -17,6 +19,7 @@ from src.common.sum_tree import SumTree
 @dataclass(slots=True)
 class Transition:
     state: np.ndarray
+    mask: np.ndarray
     action: int
     reward: float
     next_state: np.ndarray

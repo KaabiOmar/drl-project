@@ -1,10 +1,13 @@
 {
-  "hidden": [128, 128],
+  "hidden": [
+    128,
+    128
+  ],
   "learning_rate": 0.0003,
   "gamma": 0.99,
   "gae_lambda": 0.95,
   "clip_epsilon": 0.2,
-  "horizon": 2048,
+  "horizon": 256,
   "epochs": 4,
   "batch_size": 64,
   "value_coefficient": 0.5,

@@ -1,12 +1,20 @@
-"""REINFORCE avec baseline constante (moyenne des retours).
+"""REINFORCE avec baseline constante : la moyenne des retours de l'episode.
 
-Delta par rapport a `ReinforceAgent` : soustraire aux retours `G_t` leur moyenne
-(sur l'episode, ou une moyenne glissante sur les episodes recents) avant de
-calculer le gradient.
+Un seul changement : on soustrait aux retours leur moyenne avant de calculer le
+gradient.
 
-Ce que cela change et qu'il faut savoir demontrer : la baseline ne modifie pas
-l'esperance du gradient (elle est non biaisee) mais en reduit la variance. La
-comparaison des courbes avec et sans baseline est un resultat attendu.
+Pourquoi c'est legitime, et c'est LE point a savoir demontrer : soustraire une
+quantite `b` qui ne depend pas de l'action ne change pas l'esperance du
+gradient, parce que `E[grad log pi(a|s)] = 0`. Le gradient reste donc non
+biaise, mais sa variance baisse.
+
+Pourquoi ca aide concretement : sans baseline, si tous les retours d'un episode
+sont positifs, toutes les actions voient leur probabilite augmenter - y compris
+les mauvaises, juste un peu moins que les bonnes. Avec la baseline, les actions
+sous la moyenne sont explicitement decouragees.
+
+La comparaison des courbes avec et sans baseline est un resultat attendu du
+rapport : meme score final, moins d'oscillations.
 """
 
 from __future__ import annotations
@@ -17,8 +25,10 @@ from src.agents.reinforce import ReinforceAgent
 class ReinforceMeanBaselineAgent(ReinforceAgent):
     name = "reinforce_baseline"
 
-    def __init__(self, *args, **kwargs) -> None:
-        raise NotImplementedError(
-            "ReinforceMeanBaselineAgent n'est pas encore implemente. "
-            "La marche a suivre est decrite dans la docstring du module."
-        )
+    def _advantages(self, returns, states):
+        # Un episode d'un seul pas n'a pas de variance a reduire : on le laisse
+        # tel quel plutot que de renvoyer un avantage nul, qui annulerait le
+        # gradient.
+        if returns.numel() < 2:
+            return returns
+        return returns - returns.mean()

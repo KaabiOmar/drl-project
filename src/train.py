@@ -154,6 +154,7 @@ def run_training_episode(env, agent) -> None:
         agent.observe(
             Transition(
                 state=state,
+                mask=mask,
                 action=int(action),
                 reward=float(env.score() - previous_score),
                 next_state=next_state,
