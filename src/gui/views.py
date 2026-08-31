@@ -12,6 +12,7 @@ from abc import ABC, abstractmethod
 from src.envs.bobail import (
     AGENT,
     BOBAIL,
+    EMPTY,
     DIRECTIONS,
     OPPONENT,
     PHASE_BOBAIL,
@@ -28,6 +29,7 @@ AGENT_COLOR = (86, 156, 246)
 OPPONENT_COLOR = (232, 106, 96)
 BOBAIL_COLOR = (240, 214, 120)
 HIGHLIGHT = (120, 200, 140)
+SELECTION = (250, 250, 250)
 
 
 class BoardView(ABC):
@@ -55,6 +57,10 @@ class BoardView(ABC):
         """Traduit une touche en action, pour les environnements sans plateau."""
         return None
 
+    def highlights(self, env, selection: int | None) -> list[int]:
+        """Cases a marquer comme destinations legales, pour le mode humain."""
+        return []
+
 
 class GridLikeView(BoardView):
     """Vue commune aux environnements en grille (une case = une position)."""
@@ -69,6 +75,13 @@ class GridLikeView(BoardView):
                     self.cell_size,
                 )
                 pygame.draw.rect(surface, GRID, rect, width=1)
+
+    def _ring(self, pygame, surface, origin, row, col, color, radius_ratio=0.42) -> None:
+        center = (
+            origin[0] + int((col + 0.5) * self.cell_size),
+            origin[1] + int((row + 0.5) * self.cell_size),
+        )
+        pygame.draw.circle(surface, color, center, int(self.cell_size * radius_ratio), width=2)
 
     def _circle(self, pygame, surface, origin, row, col, color, radius_ratio=0.34) -> None:
         center = (
@@ -155,11 +168,26 @@ class BobailView(GridLikeView):
 
         start_row, start_col = row_col_of(selection)
         row, col = row_col_of(cell)
-        for direction, (d_row, d_col) in enumerate(DIRECTIONS):
-            target = env._slide_target(selection, direction)
-            if target is not None and target == cell:
+        for direction in range(len(DIRECTIONS)):
+            if env.slide_target(selection, direction) == cell:
                 return pawn_action(selection, direction), None
-        return None, None
+        # Clic ailleurs : on change de pion selectionne, ou on annule.
+        return (None, cell) if env.board[cell] == AGENT else (None, None)
+
+    def highlights(self, env, selection: int | None) -> list[int]:
+        if env.phase == PHASE_BOBAIL:
+            row, col = row_col_of(env.bobail)
+            cells = []
+            for d_row, d_col in DIRECTIONS:
+                new_row, new_col = row + d_row, col + d_col
+                if 0 <= new_row < SIZE and 0 <= new_col < SIZE:
+                    if env.board[cell_of(new_row, new_col)] == EMPTY:
+                        cells.append(cell_of(new_row, new_col))
+            return cells
+        if selection is None:
+            return []
+        targets = [env.slide_target(selection, d) for d in range(len(DIRECTIONS))]
+        return [cell for cell in targets if cell is not None]
 
 
 VIEWS: dict[str, type[BoardView]] = {

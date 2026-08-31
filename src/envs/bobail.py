@@ -209,12 +209,16 @@ class Bobail(Env):
         legal = []
         for cell in np.flatnonzero(self.board == player):
             for direction in range(NUM_DIRECTIONS):
-                if self._slide_target(int(cell), direction) is not None:
+                if self.slide_target(int(cell), direction) is not None:
                     legal.append(pawn_action(int(cell), direction))
         return legal
 
-    def _slide_target(self, cell: int, direction: int) -> int | None:
-        """Case d'arrivee d'un glissement maximal, ou None si le pion est bloque."""
+    def slide_target(self, cell: int, direction: int) -> int | None:
+        """Case d'arrivee d'un glissement maximal, ou None si le pion est bloque.
+
+        Publique : l'interface graphique s'en sert pour montrer les destinations
+        legales d'un pion selectionne.
+        """
         d_row, d_col = DIRECTIONS[direction]
         row, col = row_col_of(cell)
         target = None
@@ -236,7 +240,7 @@ class Bobail(Env):
         self.bobail = destination
 
     def _slide_pawn(self, cell: int, direction: int) -> None:
-        target = self._slide_target(cell, direction)
+        target = self.slide_target(cell, direction)
         if target is None:
             raise ValueError(f"glissement impossible depuis {cell} vers {direction}")
         self.board[target] = self.board[cell]
@@ -288,7 +292,7 @@ class Bobail(Env):
 
         def distance(action: int) -> int:
             cell, direction = decode_pawn_action(action)
-            target = self._slide_target(cell, direction)
+            target = self.slide_target(cell, direction)
             row, col = row_col_of(target)
             return max(abs(row - bobail_row), abs(col - bobail_col))
 

@@ -20,7 +20,7 @@ from pathlib import Path
 
 from src.agents import AGENT_REGISTRY, make_agent
 from src.envs import make_env
-from src.gui.views import BACKGROUND, TEXT, VIEWS
+from src.gui.views import BACKGROUND, HIGHLIGHT, SELECTION, TEXT, VIEWS
 
 MARGIN = 32
 PANEL_HEIGHT = 110
@@ -104,12 +104,29 @@ def main() -> None:
             last_move = now
 
         surface.fill(BACKGROUND)
+        draw_hints(pygame, surface, view, env, selection, cols)
         view.draw(pygame, surface, env, (MARGIN, MARGIN))
         draw_panel(pygame, surface, font, env, args, paused, height)
         pygame.display.flip()
         clock.tick(60)
 
     pygame.quit()
+
+
+def draw_hints(pygame, surface, view, env, selection: int | None, cols: int) -> None:
+    """Marque la piece selectionnee et les destinations legales (mode humain)."""
+    for cell in view.highlights(env, selection):
+        row, col = divmod(cell, cols)
+        rect = pygame.Rect(
+            MARGIN + col * view.cell_size,
+            MARGIN + row * view.cell_size,
+            view.cell_size,
+            view.cell_size,
+        )
+        pygame.draw.rect(surface, HIGHLIGHT, rect.inflate(-16, -16), width=2, border_radius=6)
+    if selection is not None:
+        row, col = divmod(selection, cols)
+        view._ring(pygame, surface, (MARGIN, MARGIN), row, col, SELECTION)
 
 
 def play_agent_move(env, agent) -> None:
