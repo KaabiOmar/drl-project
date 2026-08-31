@@ -13,7 +13,6 @@ from __future__ import annotations
 import argparse
 import json
 import time
-from dataclasses import asdict
 from pathlib import Path
 
 import numpy as np
@@ -51,40 +50,91 @@ def env_kwargs(name: str, args: argparse.Namespace, seed: int) -> dict:
 
 def main() -> None:
     args = parse_args()
-    set_seed(args.seed)
     config = json.loads(args.config.read_text()) if args.config else {}
+    run_dir = train_one(
+        env_name=args.env,
+        agent_name=args.agent,
+        episodes=args.episodes,
+        seed=args.seed,
+        eval_games=args.eval_games,
+        opponent=args.opponent,
+        config=config,
+        out=args.out,
+    )
+    print(f"resultats: {run_dir/'metrics.csv'}")
 
-    kwargs = env_kwargs(args.env, args, args.seed)
-    env = make_env(args.env, **kwargs)
-    agent = make_agent(args.agent, env, seed=args.seed, **config)
 
-    run_dir = args.out / f"{args.env}__{args.agent}__seed{args.seed}"
+def train_one(
+    env_name: str,
+    agent_name: str,
+    episodes: int,
+    seed: int = 0,
+    eval_games: int = 100,
+    opponent: str = "random",
+    config: dict | None = None,
+    out: Path = Path("runs"),
+    verbose: bool = True,
+) -> Path:
+    """Entraine un couple (environnement, agent) et ecrit ses metriques.
+
+    Point d'entree partage par la ligne de commande et par `src.experiment`,
+    pour qu'une campagne complete et un lancement manuel produisent exactement
+    les memes fichiers.
+    """
+    config = config or {}
+    set_seed(seed)
+
+    kwargs: dict = {}
+    if env_name in ("tictactoe", "bobail"):
+        kwargs["seed"] = seed
+    if env_name == "bobail":
+        kwargs["opponent"] = opponent
+
+    env = make_env(env_name, **kwargs)
+    agent = make_agent(agent_name, env, seed=seed, **config)
+
+    run_dir = out / f"{env_name}__{agent_name}__seed{seed}"
     run_dir.mkdir(parents=True, exist_ok=True)
-    (run_dir / "config.json").write_text(json.dumps({**vars(args), **config}, default=str, indent=2))
+    (run_dir / "config.json").write_text(
+        json.dumps(
+            {
+                "env": env_name,
+                "agent": agent_name,
+                "episodes": episodes,
+                "seed": seed,
+                "opponent": opponent,
+                "eval_games": eval_games,
+                **config,
+            },
+            default=str,
+            indent=2,
+        )
+    )
     logger = CsvLogger(run_dir / "metrics.csv")
 
-    checkpoints = [c for c in CHECKPOINTS if c <= args.episodes] or [args.episodes]
-    if args.episodes not in checkpoints:
-        checkpoints.append(args.episodes)
+    checkpoints = [c for c in CHECKPOINTS if c <= episodes] or [episodes]
+    if episodes not in checkpoints:
+        checkpoints.append(episodes)
 
     started = time.perf_counter()
-    for episode in range(1, args.episodes + 1):
-        if args.agent not in NON_LEARNING_AGENTS:
+    for episode in range(1, episodes + 1):
+        if agent_name not in NON_LEARNING_AGENTS:
             run_training_episode(env, agent)
         if episode in checkpoints:
-            result = evaluate(agent, lambda: make_env(args.env, **kwargs), games=args.eval_games)
+            result = evaluate(agent, lambda: make_env(env_name, **kwargs), games=eval_games)
             result.episodes_trained = episode
             logger.log(result)
             agent.save(run_dir / f"model_{episode}.pt")
-            elapsed = time.perf_counter() - started
-            print(
-                f"[{episode:>9}] score={result.mean_score:+.3f} "
-                f"win={result.win_rate:.2f} len={result.mean_length:.1f} "
-                f"move={result.mean_time_per_move_ms:.2f}ms ({elapsed:.0f}s)"
-            )
+            if verbose:
+                elapsed = time.perf_counter() - started
+                print(
+                    f"[{episode:>9}] score={result.mean_score:+.3f} "
+                    f"win={result.win_rate:.2f} len={result.mean_length:.1f} "
+                    f"move={result.mean_time_per_move_ms:.2f}ms ({elapsed:.0f}s)"
+                )
 
     logger.close()
-    print(f"resultats: {run_dir/'metrics.csv'}")
+    return run_dir
 
 
 def run_training_episode(env, agent) -> None:

@@ -1,0 +1,8 @@
+environnement,agent,episodes,graines,score_moyen,ecart_entre_graines,longueur_moyenne,ms_par_coup,taux_victoire
+bobail,random,1000,1,-0.200,0.000,10.8,0.005,0.400
+line_world,dqn,1000,1,0.000,0.000,100.0,0.021,0.000
+line_world,dqn,10000,1,1.000,0.000,2.0,0.021,1.000
+line_world,random,1000,1,0.300,0.000,3.6,0.005,0.650
+tictactoe,dqn,1000,1,1.000,0.000,3.0,0.023,1.000
+tictactoe,dqn,10000,1,1.000,0.000,4.0,0.023,1.000
+tictactoe,dqn,20000,1,1.000,0.000,3.0,0.022,1.000

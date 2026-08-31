@@ -27,7 +27,15 @@ python -m src.train --env bobail --agent dqn --episodes 10000 --config configs/d
 python -m src.eval  --env bobail --agent dqn --model runs/bobail__dqn__seed0/model_10000.pt
 python -m src.gui.app --env bobail --agent human             # jouer soi-meme
 python -m src.gui.app --env bobail --agent mcts_uct          # regarder jouer un agent
+
+python -m src.experiment --dry-run                           # afficher la matrice de la campagne
+python -m src.experiment --envs bobail --agents dqn,ddqn --seeds 0,1,2 --episodes 100000
+python -m src.report_figures                                 # courbes + reports/summary.csv
 ```
+
+Deux environnements Python cohabitent : `.venv` (Python 3.14, NumPy seul) suffit
+pour les tests, la GUI et les agents de planification ; `.venv-torch`
+(Python 3.12) est necessaire des qu'un agent neuronal entre en jeu.
 
 ## Structure
 
@@ -54,9 +62,12 @@ vecteur d'etat et un masque d'actions.
 
 Implemente et teste :
 
-* les quatre environnements, conformes a l'interface `Env` (26 tests verts) ;
+* les quatre environnements, conformes a l'interface `Env` (27 tests verts) ;
 * les agents `random`, `random_rollout` et `mcts_uct` ;
-* `dqn` comme implementation de reference de la famille "value based" ;
+* `dqn`, verifie sur Line World (+1.00 a 10 000 episodes, trajectoire optimale en
+  2 coups) et sur TicTacToe (+1.00 des 1 000 episodes) ;
+* la campagne d'experimentation (`src.experiment`) et les figures
+  (`src.report_figures`) ;
 * l'infrastructure : masquage, memoire de rejeu uniforme et prioritaire
   (SumTree), reseaux, protocole d'evaluation, journalisation CSV, GUI.
 
