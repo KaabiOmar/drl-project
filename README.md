@@ -6,17 +6,30 @@ comme environnement libre.
 
 ## Installation
 
-PyTorch ne supporte pas encore Python 3.14. Creer l'environnement avec **Python
-3.11 ou 3.12** :
+Le projet utilise DEUX environnements Python, et il faut les deux :
 
 ```bash
-python3.11 -m venv .venv
-source .venv/bin/activate
-pip install -r requirements.txt
+# 1. le coeur : environnements, agents de planification, tests, GUI.
+#    N'a besoin que de NumPy, donc n'importe quel Python recent convient.
+python3 -m venv .venv
+.venv/bin/pip install numpy pytest pygame-ce
+
+# 2. les agents neuronaux. PyTorch ne supporte pas encore Python 3.14,
+#    d'ou le 3.12 impose ici.
+python3.12 -m venv .venv-torch
+.venv-torch/bin/pip install -r requirements.txt
 ```
 
-Le coeur du projet (environnements, agents de planification, tests) ne depend
-que de NumPy : il tourne sur n'importe quelle version recente de Python.
+Pour verifier que le second est en etat :
+
+```bash
+.venv-torch/bin/python -m pytest tests -q
+.venv-torch/bin/python -m src.train --env line_world --agent dqn --episodes 10000
+```
+
+Le second doit afficher `score=+1.000` a 10 000 episodes. Si `.venv-torch/bin`
+n'existe pas, l'environnement est a recreer avec le bloc ci-dessus : il est
+ignore par git, donc un clone frais ne le contient jamais.
 
 ## Commandes
 
@@ -33,9 +46,8 @@ python -m src.experiment --envs bobail --agents dqn,ddqn --seeds 0,1,2 --episode
 python -m src.report_figures                                 # courbes + reports/summary.csv
 ```
 
-Deux environnements Python cohabitent : `.venv` (Python 3.14, NumPy seul) suffit
-pour les tests, la GUI et les agents de planification ; `.venv-torch`
-(Python 3.12) est necessaire des qu'un agent neuronal entre en jeu.
+Rappel : `.venv` suffit pour les tests, la GUI et les agents de planification ;
+`.venv-torch` est necessaire des qu'un agent neuronal entre en jeu.
 
 ## Structure
 
