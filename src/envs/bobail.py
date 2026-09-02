@@ -289,13 +289,37 @@ class Bobail(Env):
             return
         self._slide_pawn(*decode_pawn_action(self._choose_opponent_pawn(actions)))
 
+    def _bobail_target_row(self, direction: int) -> int:
+        """Ligne sur laquelle le bobail atterrirait en allant dans `direction`."""
+        row, _ = row_col_of(self.bobail)
+        return row + DIRECTIONS[direction][0]
+
     def _choose_opponent_bobail(self, directions: list[int]) -> int:
-        """L'adversaire gagne en ramenant le bobail sur SA ligne, la ligne 0."""
+        """Heuristique a trois priorites, portee de la version de Viet.
+
+        L'adversaire gagne en ramenant le bobail sur SA ligne, la ligne 0.
+
+        1. un coup qui gagne immediatement : le jouer, la partie est finie ;
+        2. sinon, ecarter les coups qui deposeraient le bobail sur la ligne de
+           l'agent - ce serait offrir la victoire ;
+        3. sinon, parmi ce qui reste, pousser le bobail le plus loin vers la
+           ligne 0.
+
+        La version precedente n'avait que la priorite 3 : elle pouvait donc
+        rater une victoire immediate, et surtout se suicider en poussant le
+        bobail dans le camp de l'agent quand c'etait le coup "le plus avance".
+        """
         if self.opponent == "random":
             return int(self.rng.choice(directions))
-        best = min(DIRECTIONS[d][0] for d in directions)
-        greedy = [d for d in directions if DIRECTIONS[d][0] == best]
-        return int(self.rng.choice(greedy))
+
+        gagnants = [d for d in directions if self._bobail_target_row(d) == OPPONENT_HOME_ROW]
+        if gagnants:
+            return int(self.rng.choice(gagnants))
+
+        sans_suicide = [d for d in directions if self._bobail_target_row(d) != AGENT_HOME_ROW]
+        candidats = sans_suicide or directions
+        meilleure_ligne = min(self._bobail_target_row(d) for d in candidats)
+        return int(self.rng.choice([d for d in candidats if self._bobail_target_row(d) == meilleure_ligne]))
 
     def _choose_opponent_pawn(self, actions: list[int]) -> int:
         """Heuristique volontairement simple : se rapprocher du bobail."""

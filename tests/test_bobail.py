@@ -11,6 +11,7 @@ import pytest
 
 from src.envs.bobail import (
     AGENT,
+    OPPONENT_HOME_ROW,
     row_col_of,
     AGENT_HOME_ROW,
     BOBAIL,
@@ -168,3 +169,54 @@ def test_heuristic_opponent_plays_legally() -> None:
                 break
             env.step(int(rng.choice(legal)))
         assert env.is_game_over()
+
+
+# --- heuristique de l'adversaire ------------------------------------------
+
+
+def place_bobail(env, row: int, col: int) -> None:
+    """Deplace le bobail sur une case donnee, en liberant son voisinage."""
+    env.board[env.bobail] = EMPTY
+    env.bobail = cell_of(row, col)
+    env.board[env.bobail] = BOBAIL
+
+
+def test_heuristic_opponent_takes_an_immediate_win() -> None:
+    """Priorite 1 : un coup qui amene le bobail sur la ligne 0 gagne, il faut le jouer."""
+    env = Bobail(opponent="heuristic", seed=0)
+    env.reset()
+    place_bobail(env, 1, 2)
+    env.board[cell_of(OPPONENT_HOME_ROW, 2)] = EMPTY  # une case liberee sur sa ligne
+
+    directions = env._legal_bobail_directions()
+    choisi = env._choose_opponent_bobail(directions)
+
+    assert env._bobail_target_row(choisi) == OPPONENT_HOME_ROW, "l'adversaire doit conclure"
+
+
+def test_heuristic_opponent_refuses_to_hand_the_win_over() -> None:
+    """Priorite 2 : ne jamais poser le bobail sur la ligne de l'agent."""
+    env = Bobail(opponent="heuristic", seed=0)
+    env.reset()
+    place_bobail(env, 3, 2)
+    env.board[cell_of(AGENT_HOME_ROW, 2)] = EMPTY  # le coup suicidaire est disponible
+
+    directions = env._legal_bobail_directions()
+    suicides = [d for d in directions if env._bobail_target_row(d) == AGENT_HOME_ROW]
+    assert suicides, "le test n'a de sens que si un coup suicidaire est legal"
+
+    for _ in range(20):  # le choix comporte un tirage aleatoire entre ex aequo
+        assert env._choose_opponent_bobail(directions) not in suicides
+
+
+def test_heuristic_opponent_otherwise_advances_toward_its_row() -> None:
+    """Priorite 3 : a defaut, se rapprocher de la ligne 0."""
+    env = Bobail(opponent="heuristic", seed=0)
+    env.reset()
+    place_bobail(env, 2, 2)
+
+    directions = env._legal_bobail_directions()
+    choisi = env._choose_opponent_bobail(directions)
+    lignes = [env._bobail_target_row(d) for d in directions]
+
+    assert env._bobail_target_row(choisi) == min(lignes)
