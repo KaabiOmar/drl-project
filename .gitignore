@@ -14,3 +14,6 @@ venv/
 # les checkpoints intermediaires non - 78 Mo pour 408 fichiers. Les modeles
 # retenus pour le rendu sont copies dans models_livrables/.
 runs*/**/*.pt
+
+# Fichiers de verrou Office, crees a l ouverture d un document
+~$*
