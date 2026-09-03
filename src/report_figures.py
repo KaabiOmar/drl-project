@@ -66,32 +66,57 @@ def plot_learning_curves(data, figures_dir: Path) -> list[Path]:
     matplotlib.use("Agg")
     import matplotlib.pyplot as plt
 
+    # Ces figures sont reduites a la largeur d'une page A4 dans le rapport : avec
+    # la typo par defaut, la legende devient illisible. On la grossit ici.
+    plt.rcParams.update({
+        "font.size": 13, "axes.titlesize": 15, "axes.labelsize": 13,
+        "xtick.labelsize": 12, "ytick.labelsize": 12, "lines.linewidth": 2.0,
+        "lines.markersize": 6,
+    })
+
     figures_dir.mkdir(parents=True, exist_ok=True)
     written = []
     envs = sorted({env_name for env_name, _ in data})
     for env_name in envs:
-        figure, axes = plt.subplots(figsize=(8, 5))
+        # Deux panneaux : le score appris a gauche, la STABILITE entre graines a
+        # droite. Le second est souvent plus parlant que le premier : deux
+        # algorithmes au meme score final ne se valent pas si l'un depend de la
+        # graine et l'autre non.
+        figure, (gauche, droite) = plt.subplots(1, 2, figsize=(13, 5))
         for (name, agent_name), by_episode in sorted(data.items()):
             if name != env_name:
                 continue
             episodes = sorted(by_episode)
-            means = [
-                sum(r["mean_score"] for r in by_episode[e]) / len(by_episode[e]) for e in episodes
-            ]
-            axes.plot(episodes, means, marker="o", label=agent_name)
-            lows = [min(r["mean_score"] for r in by_episode[e]) for e in episodes]
-            highs = [max(r["mean_score"] for r in by_episode[e]) for e in episodes]
-            axes.fill_between(episodes, lows, highs, alpha=0.15)
+            means, lows, highs, spreads = [], [], [], []
+            for e in episodes:
+                scores = [r["mean_score"] for r in by_episode[e]]
+                means.append(sum(scores) / len(scores))
+                lows.append(min(scores))
+                highs.append(max(scores))
+                spreads.append(max(scores) - min(scores))
+            trace, = gauche.plot(episodes, means, marker="o", label=agent_name)
+            gauche.fill_between(episodes, lows, highs, alpha=0.13, color=trace.get_color())
+            droite.plot(episodes, spreads, marker="o", color=trace.get_color(),
+                        label=agent_name)
 
-        axes.set_xscale("log")
-        axes.set_xlabel("episodes d'entrainement")
-        axes.set_ylabel("score moyen de la politique obtenue")
-        axes.set_title(f"{env_name} - apprentissage")
-        axes.axhline(0.0, color="grey", linewidth=0.8, linestyle="--")
-        axes.grid(alpha=0.25)
-        axes.legend(fontsize=8)
+        for axe, titre, ylabel in (
+            (gauche, "apprentissage", "score moyen de la politique obtenue"),
+            (droite, "stabilite entre graines", "ecart entre la meilleure et la pire graine"),
+        ):
+            axe.set_xscale("log")
+            axe.set_xlabel("episodes d'entrainement")
+            axe.set_ylabel(ylabel)
+            axe.set_title(f"{env_name} - {titre}")
+            axe.grid(alpha=0.25)
+        gauche.axhline(0.0, color="grey", linewidth=0.8, linestyle="--")
+        droite.set_ylim(bottom=0.0)
+
+        # Legende commune, hors des axes : sur 11 agents elle masquait les courbes.
+        poignees, etiquettes = gauche.get_legend_handles_labels()
+        figure.legend(poignees, etiquettes, loc="lower center", ncol=4, fontsize=13,
+                      frameon=False, bbox_to_anchor=(0.5, -0.03))
         path = figures_dir / f"apprentissage_{env_name}.png"
-        figure.tight_layout()
+        figure.tight_layout(rect=(0, 0.16, 1, 1))
         figure.savefig(path, dpi=150)
         plt.close(figure)
         written.append(path)
