@@ -1,0 +1,4 @@
+episodes_trained,mean_score,std_score,mean_length,mean_time_per_move_ms,win_rate,loss_rate,draw_rate
+1000,1.0,0.0,5.615,0.029308927093673155,1.0,0.0,0.0
+10000,1.0,0.0,5.485,0.029145015480884825,1.0,0.0,0.0
+100000,1.0,0.0,6.11,0.029008299776897103,1.0,0.0,0.0

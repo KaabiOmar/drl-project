@@ -7,12 +7,10 @@ venv/
 .idea/
 .vscode/
 
-# Sorties d'execution : les modeles retenus pour le rendu sont ajoutes
-# explicitement avec `git add -f`.
-runs/*
-!runs/.gitkeep
-reports/figures/*
-!reports/figures/.gitkeep
-
 # Environnements virtuels, quel que soit leur suffixe (.venv-torch, .venv-py312...)
 .venv*/
+
+# Sorties de campagne : les mesures (metrics.csv, config.json) sont versionnees,
+# les checkpoints intermediaires non - 78 Mo pour 408 fichiers. Les modeles
+# retenus pour le rendu sont copies dans models_livrables/.
+runs*/**/*.pt

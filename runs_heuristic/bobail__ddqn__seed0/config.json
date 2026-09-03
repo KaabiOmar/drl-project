@@ -1,0 +1,8 @@
+{
+  "env": "bobail",
+  "agent": "ddqn",
+  "episodes": 100000,
+  "seed": 0,
+  "opponent": "heuristic",
+  "eval_games": 200
+}

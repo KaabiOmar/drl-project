@@ -1,0 +1,9 @@
+{
+  "env": "line_world",
+  "agent": "random_rollout",
+  "episodes": 1000000,
+  "seed": 0,
+  "opponent": "random",
+  "eval_games": 200,
+  "rollouts_per_action": 20
+}

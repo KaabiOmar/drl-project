@@ -1,0 +1,14 @@
+{
+  "env": "bobail",
+  "agent": "reinforce",
+  "episodes": 100000,
+  "seed": 0,
+  "opponent": "heuristic",
+  "eval_games": 200,
+  "hidden": [
+    128,
+    128
+  ],
+  "learning_rate": 0.001,
+  "gamma": 0.99
+}
