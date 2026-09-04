@@ -1,0 +1,8 @@
+3 runs : 1 environnements x 1 agents x 3 graines
+100000 episodes chacun
+
+[1/3] bobail/dqn/graine 0
+[2/3] bobail/dqn/graine 1
+[3/3] bobail/dqn/graine 2
+
+3 runs termines, 0 en echec, en 119.6 min

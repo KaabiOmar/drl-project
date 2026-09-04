@@ -1,0 +1,4 @@
+[     1000] score=+1.000 win=1.00 len=4.8 move=0.25ms (38s)
+[    10000] score=+1.000 win=1.00 len=5.1 move=0.24ms (281s)
+[   100000] score=+0.990 win=0.99 len=4.8 move=0.25ms (2813s)
+resultats: runs\bobail__ddqn__seed1\metrics.csv

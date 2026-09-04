@@ -1,0 +1,5 @@
+21 runs : 1 environnements x 7 agents x 3 graines
+100000 episodes chacun
+
+[1/21] bobail/ddqn/graine 0
+[2/21] bobail/ddqn/graine 1
