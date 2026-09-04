@@ -83,6 +83,15 @@ def plot_learning_curves(data, figures_dir: Path) -> list[Path]:
         # algorithmes au meme score final ne se valent pas si l'un depend de la
         # graine et l'autre non.
         figure, (gauche, droite) = plt.subplots(1, 2, figsize=(13, 5))
+
+        # Sur un environnement sature, plusieurs agents ont EXACTEMENT la meme
+        # courbe et le dernier trace recouvre les autres : sur Line World, huit
+        # agents sont a +1,00 partout, dont Random Rollout, invisible sous
+        # reinforce_critic. On alterne les styles de trait pour que les courbes
+        # superposees se devinent, et on annote leur nombre.
+        styles = ["-", "--", ":", "-."]
+        signatures = {}
+        courbes = []
         for (name, agent_name), by_episode in sorted(data.items()):
             if name != env_name:
                 continue
@@ -94,10 +103,27 @@ def plot_learning_curves(data, figures_dir: Path) -> list[Path]:
                 lows.append(min(scores))
                 highs.append(max(scores))
                 spreads.append(max(scores) - min(scores))
-            trace, = gauche.plot(episodes, means, marker="o", label=agent_name)
+            courbes.append((agent_name, episodes, means, lows, highs, spreads))
+            signatures.setdefault(tuple(round(m, 3) for m in means), []).append(agent_name)
+
+        for index, (agent_name, episodes, means, lows, highs, spreads) in enumerate(courbes):
+            style = styles[index % len(styles)]
+            trace, = gauche.plot(episodes, means, marker="o", linestyle=style,
+                                 label=agent_name)
             gauche.fill_between(episodes, lows, highs, alpha=0.13, color=trace.get_color())
-            droite.plot(episodes, spreads, marker="o", color=trace.get_color(),
-                        label=agent_name)
+            droite.plot(episodes, spreads, marker="o", linestyle=style,
+                        color=trace.get_color(), label=agent_name)
+
+        # Annotation des groupes de courbes confondues, du plus gros au plus petit.
+        groupes = sorted(((len(a), sig) for sig, a in signatures.items() if len(a) > 1),
+                         reverse=True)
+        for rang, (combien, sig) in enumerate(groupes[:2]):
+            episodes = courbes[0][1]
+            gauche.annotate(f"{combien} agents superposes",
+                            xy=(episodes[-1], sig[-1]),
+                            xytext=(-12, -26 - 22 * rang), textcoords="offset points",
+                            ha="right", fontsize=11, style="italic", color="#444444",
+                            arrowprops=dict(arrowstyle="-", color="#888888", lw=0.9))
 
         for axe, titre, ylabel in (
             (gauche, "apprentissage", "score moyen de la politique obtenue"),
