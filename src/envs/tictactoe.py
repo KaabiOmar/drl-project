@@ -29,6 +29,10 @@ class TicTacToe(Env):
 
     def __init__(self, seed: int | None = None) -> None:
         self.rng = np.random.default_rng(seed)
+        # Politique adverse injectable. None = tirage uniforme, le comportement
+        # par defaut et celui de toutes nos mesures. L'interface graphique s'en
+        # sert pour faire jouer l'adversaire par un modele entraine.
+        self.external_opponent = None
         self.reset()
 
     @property
@@ -65,7 +69,11 @@ class TicTacToe(Env):
             return
 
         empty = np.flatnonzero(self.board == EMPTY)
-        self.board[self.rng.choice(empty)] = OPPONENT
+        if self.external_opponent is not None:
+            choix = int(self.external_opponent(self, empty))
+        else:
+            choix = int(self.rng.choice(empty))
+        self.board[choix] = OPPONENT
         self._settle(OPPONENT)
 
     def _settle(self, player: int) -> bool:
@@ -88,6 +96,7 @@ class TicTacToe(Env):
 
     def clone(self) -> "TicTacToe":
         new = TicTacToe.__new__(TicTacToe)
+        new.external_opponent = self.external_opponent
         new.rng = copy.deepcopy(self.rng)
         new.board = self.board.copy()
         new._score = self._score

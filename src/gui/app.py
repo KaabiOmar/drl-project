@@ -20,6 +20,7 @@ from pathlib import Path
 
 from src.agents import AGENT_REGISTRY, make_agent
 from src.envs import make_env
+from src.gui.adversaire import brancher
 from src.gui.views import BACKGROUND, HIGHLIGHT, SELECTION, TEXT, VIEWS
 
 MARGIN = 32
@@ -34,6 +35,11 @@ def parse_args() -> argparse.Namespace:
     parser.add_argument("--opponent", default="random")
     parser.add_argument("--seed", type=int, default=0)
     parser.add_argument("--delay", type=int, default=400, help="ms entre deux coups de l'agent")
+    parser.add_argument("--vs", default=None,
+                        help="nom d'un agent qui tiendra le role de l'ADVERSAIRE : "
+                             "vous jouez contre lui (tictactoe et bobail seulement)")
+    parser.add_argument("--vs-model", type=Path, default=None,
+                        help="modele a charger pour l'agent adverse")
     return parser.parse_args()
 
 
@@ -57,13 +63,23 @@ def main() -> None:
         if args.model is not None:
             agent.load(args.model)
 
+    # --vs : l'adversaire integre est remplace par un agent entraine, et c'est
+    # vous qui jouez. On force donc le mode humain.
+    if args.vs is not None:
+        adverse = make_agent(args.vs, env, seed=args.seed + 1)
+        if args.vs_model is not None:
+            adverse.load(args.vs_model)
+        brancher(args.env, env, adverse)
+        agent = None
+
     rows, cols = view.grid_shape(env)
     width = cols * view.cell_size + 2 * MARGIN
     height = rows * view.cell_size + 2 * MARGIN + PANEL_HEIGHT
 
     pygame.init()
     surface = pygame.display.set_mode((width, height))
-    pygame.display.set_caption(f"DRL - {args.env} - {args.agent}")
+    titre = f"DRL - {args.env} - " + (f"vous contre {args.vs}" if args.vs else args.agent)
+    pygame.display.set_caption(titre)
     font = pygame.font.SysFont("menlo,monospace", 15)
     clock = pygame.time.Clock()
 
@@ -149,8 +165,9 @@ def cell_at(position, view, rows: int, cols: int) -> int | None:
 
 def draw_panel(pygame, surface, font, env, args, paused: bool, height: int) -> None:
     status = "terminee" if env.is_game_over() else ("en pause" if paused else "en cours")
+    camp = f"vous contre {args.vs}" if args.vs else f"agent {args.agent}"
     lines = [
-        f"env {args.env}   agent {args.agent}   partie {status}",
+        f"env {args.env}   {camp}   partie {status}",
         f"score {env.score():+.1f}",
         "espace pause   n coup suivant   r rejouer   echap quitter",
     ]

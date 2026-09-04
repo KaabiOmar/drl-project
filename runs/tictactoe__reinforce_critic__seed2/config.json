@@ -1,8 +1,0 @@
-{
-  "env": "tictactoe",
-  "agent": "reinforce_critic",
-  "episodes": 1000000,
-  "seed": 2,
-  "opponent": "random",
-  "eval_games": 200
-}

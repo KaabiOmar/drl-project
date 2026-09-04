@@ -1,8 +1,0 @@
-{
-  "env": "grid_world",
-  "agent": "reinforce_critic",
-  "episodes": 100000,
-  "seed": 1,
-  "opponent": "random",
-  "eval_games": 200
-}

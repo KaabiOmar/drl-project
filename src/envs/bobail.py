@@ -93,6 +93,11 @@ class Bobail(Env):
         self.opponent = opponent
         self.max_turns = max_turns
         self.rng = np.random.default_rng(seed)
+        # Politique adverse injectable. None = mode random ou heuristic, le
+        # comportement par defaut et celui de toutes nos mesures. L'interface
+        # graphique s'en sert pour faire jouer l'adversaire par un modele
+        # entraine, en lui presentant le plateau retourne.
+        self.external_opponent = None
         self.reset()
 
     # --- interface Env --------------------------------------------------------
@@ -186,6 +191,7 @@ class Bobail(Env):
 
     def clone(self) -> "Bobail":
         new = Bobail.__new__(Bobail)
+        new.external_opponent = self.external_opponent
         new.opponent = self.opponent
         new.max_turns = self.max_turns
         new.rng = copy.deepcopy(self.rng)
@@ -296,6 +302,7 @@ class Bobail(Env):
 
     def _choose_opponent_bobail(self, directions: list[int]) -> int:
         """Heuristique a trois priorites, portee de la version de Viet.
+        Court-circuitee si une politique adverse a ete injectee.
 
         L'adversaire gagne en ramenant le bobail sur SA ligne, la ligne 0.
 
@@ -309,6 +316,8 @@ class Bobail(Env):
         rater une victoire immediate, et surtout se suicider en poussant le
         bobail dans le camp de l'agent quand c'etait le coup "le plus avance".
         """
+        if self.external_opponent is not None:
+            return int(self.external_opponent(self, PHASE_BOBAIL, directions))
         if self.opponent == "random":
             return int(self.rng.choice(directions))
 
@@ -323,6 +332,8 @@ class Bobail(Env):
 
     def _choose_opponent_pawn(self, actions: list[int]) -> int:
         """Heuristique volontairement simple : se rapprocher du bobail."""
+        if self.external_opponent is not None:
+            return int(self.external_opponent(self, PHASE_PAWN, actions))
         if self.opponent == "random":
             return int(self.rng.choice(actions))
         bobail_row, bobail_col = row_col_of(self.bobail)
