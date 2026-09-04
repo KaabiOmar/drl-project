@@ -1,0 +1,14 @@
+{
+  "env": "line_world",
+  "agent": "reinforce",
+  "episodes": 1000000,
+  "seed": 1,
+  "opponent": "random",
+  "eval_games": 200,
+  "hidden": [
+    128,
+    128
+  ],
+  "learning_rate": 0.001,
+  "gamma": 0.99
+}

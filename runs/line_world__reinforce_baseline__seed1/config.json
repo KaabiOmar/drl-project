@@ -1,0 +1,8 @@
+{
+  "env": "line_world",
+  "agent": "reinforce_baseline",
+  "episodes": 1000000,
+  "seed": 1,
+  "opponent": "random",
+  "eval_games": 200
+}

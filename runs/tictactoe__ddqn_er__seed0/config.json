@@ -1,0 +1,22 @@
+{
+  "env": "tictactoe",
+  "agent": "ddqn_er",
+  "episodes": 1000000,
+  "seed": 0,
+  "opponent": "random",
+  "eval_games": 200,
+  "hidden": [
+    128,
+    128
+  ],
+  "learning_rate": 0.0005,
+  "gamma": 0.99,
+  "epsilon_start": 1.0,
+  "epsilon_end": 0.05,
+  "epsilon_decay": 0.9995,
+  "target_update": 500,
+  "batch_size": 64,
+  "buffer_capacity": 100000,
+  "warmup": 1000,
+  "train_every": 4
+}
